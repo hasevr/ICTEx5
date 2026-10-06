@@ -25,7 +25,7 @@ ESP32-DevKitC は USB シリアル変換 IC CP210x を使っています。
   「Silicon Labs CP210x … (COMx)」が出れば OK。出なければ
   [Silicon Labs のページ](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads)の
   「CP210x Universal Windows Driver」を入れます(展開した `silabser.inf` を右クリック →「インストール」)。
-- **Mac**: 新しい macOS は標準で認識します。ターミナルで `ls /dev/cu.*` を実行し、ESP32 をつないだときに増えるものがあれば OK。
+- **Mac**: macOS の版によっては標準で認識します。ターミナルで `ls /dev/cu.*` を実行し、ESP32 をつないだときに増えるものがあれば OK。
   無ければ同じページの「CP210x VCP Mac OSX Driver」を入れます。
 - **Chromebook / Linux**: 追加の作業は不要です。
 
