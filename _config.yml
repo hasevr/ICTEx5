@@ -1,0 +1,18 @@
+title: 情報通信実験第5
+description: 触覚提示実験(ESP32)— AI コーディング前提版
+lang: ja
+remote_theme: just-the-docs/just-the-docs@v0.10.1
+plugins:
+  - jekyll-remote-theme
+search_enabled: true
+search:
+  heading_level: 3
+heading_anchors: true
+color_scheme: light
+aux_links:
+  "GitHub": "https://github.com/hasevr/ICTEx5"
+footer_content: "東京科学大学 情報通信系 情報通信実験第5 / 長谷川研究室"
+exclude:
+  - README.md
+  - notebooks/
+  - agent/
