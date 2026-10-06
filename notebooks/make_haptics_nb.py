@@ -11,15 +11,26 @@ md("""# 情報通信実験第5 触覚提示実験(Colab + AI)
 2. 最後に出る「▶ ESP32 ブリッジを開く」を **Chrome か Edge の新しいタブ**で開き、ESP32 をつないで「ESP32 に接続」。
 3. 左下の「ターミナル」で `cd /content/work && agy` として AI エージェントを起動する。"""),
 code("""%%bash
-# 1. ESP-IDF v5.5.1 のインストール(3分ほど)
+# 1. ESP-IDF v5.5.1 の準備
+#    インストール済みのもの(GitHub のリリース)を取ってきて展開する。合わなければ通常のインストール(3分ほど)
 set -e
 T0=$(date +%s)
-PYV=$(python3 -c 'import sys;print(f"{sys.version_info[0]}.{sys.version_info[1]}")')
-apt-get -qq update > /dev/null && apt-get -qq install -y flex bison gperf ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0 python3-venv python${PYV}-venv > /dev/null
-cd /content
-[ -d esp-idf ] || git clone -q -b v5.5.1 --depth 1 --recursive --shallow-submodules https://github.com/espressif/esp-idf.git
+REL=https://github.com/hasevr/ICTEx5/releases/download/colab-esp-idf-v5.5.1
 export IDF_TOOLS_PATH=/content/.espressif
-./esp-idf/install.sh esp32 > /content/idf-install.log 2>&1 || { tail -30 /content/idf-install.log; exit 1; }
+cd /content
+full_install() {
+  echo "通常のインストールを行います(3分ほど)"
+  PYV=$(python3 -c 'import sys;print(f"{sys.version_info[0]}.{sys.version_info[1]}")')
+  apt-get -qq update > /dev/null && apt-get -qq install -y flex bison gperf ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0 python3-venv python${PYV}-venv > /dev/null
+  rm -rf /content/esp-idf /content/.espressif
+  git clone -q -b v5.5.1 --depth 1 --recursive --shallow-submodules https://github.com/espressif/esp-idf.git /content/esp-idf
+  /content/esp-idf/install.sh esp32 > /content/idf-install.log 2>&1 || { tail -30 /content/idf-install.log; exit 1; }
+}
+if [ ! -d /content/esp-idf ]; then
+  # ビルドに使うツール(ninja・ccache)は Colab に入っていないので入れる
+  apt-get -qq install -y ninja-build ccache zstd > /dev/null 2>&1 || { apt-get -qq update > /dev/null; apt-get -qq install -y ninja-build ccache zstd > /dev/null; }
+  curl -sfL "$REL/esp-idf-v5.5.1-colab.tar.zst" | tar -C /content -I zstd -x || full_install
+fi
 # どのシェル(ターミナル・AI)からでも idf.py が使えるようにする
 cat > /usr/local/bin/idf.py <<'EOF'
 #!/bin/bash
@@ -28,18 +39,26 @@ export IDF_TOOLS_PATH=/content/.espressif
 exec python3 "$IDF_PATH/tools/idf.py" "$@"
 EOF
 chmod +x /usr/local/bin/idf.py
-echo "### ESP-IDF の準備: $(( $(date +%s) - T0 )) 秒" """),
+# 取ってきたものが動かなければ(Colab の Python の版が変わった等)、通常のインストールに切り替える
+idf.py --version > /dev/null 2>&1 || { full_install; idf.py --version > /dev/null; }
+echo "### ESP-IDF の準備: $(( $(date +%s) - T0 )) 秒($(idf.py --version))" """),
 code("""%%bash
 # 2. 実験のプロジェクトと、AI への指示ファイルを用意する
 set -e
 mkdir -p /content/work && cd /content/work
-[ -d ActiveHaptic ] || git clone -q https://github.com/hasevr/ICTEx5ActiveHaptic ActiveHaptic
-cat > ActiveHaptic/main/CMakeLists.txt <<'EOF'
-idf_component_register(SRCS "main.c"
+# ビルド済みのプロジェクト一式を取ってくる(初回ビルドが速くなる)。最新のソースは git pull で取り込む
+if [ ! -d ActiveHaptic ] && [ ! -d SoftHaptics ]; then
+  curl -sfL https://github.com/hasevr/ICTEx5/releases/download/colab-esp-idf-v5.5.1/work-build-cache.tar.zst | tar -C /content -I zstd -x || echo "(ビルド済みのキャッシュなし。通常どおり用意します)"
+fi
+for p in ActiveHaptic SoftHaptics; do
+  if [ -d $p/.git ]; then git -C $p pull -q --ff-only || echo "$p: git pull できませんでした(手元の版で続けます)"
+  else rm -rf $p; git clone -q https://github.com/hasevr/ICTEx5$p $p; fi
+done
+# ファイルの中身が変わるときだけ書く(書き直すとビルドがやり直しになるため)
+NEW_CMAKE='idf_component_register(SRCS "main.c"
                     INCLUDE_DIRS "."
-                    REQUIRES esp_driver_uart driver spi_flash esp_adc esp_timer)
-EOF
-[ -d SoftHaptics ] || git clone -q https://github.com/hasevr/ICTEx5SoftHaptics SoftHaptics
+                    REQUIRES esp_driver_uart driver spi_flash esp_adc esp_timer)'
+[ "$(cat ActiveHaptic/main/CMakeLists.txt)" = "$NEW_CMAKE" ] || echo "$NEW_CMAKE" > ActiveHaptic/main/CMakeLists.txt
 # SoftHaptics には sdkconfig が無いので、FreeRTOS の周期 1 kHz を既定値として与える
 grep -q CONFIG_FREERTOS_HZ SoftHaptics/sdkconfig.defaults 2>/dev/null || echo 'CONFIG_FREERTOS_HZ=1000' >> SoftHaptics/sdkconfig.defaults
 (curl -sfL -o AGENTS.md https://raw.githubusercontent.com/hasevr/ICTEx5/main/agent/AGENTS.md && cp AGENTS.md GEMINI.md) || echo "AGENTS.md を取得できませんでした"
@@ -50,7 +69,7 @@ echo "$1" > /content/agy_url.txt
 EOF
 chmod +x /usr/local/bin/xdg-open
 ls /content/work"""),
-code("""# 3. 試しに ActiveHaptic をビルドする(初回は2〜3分)
+code("""# 3. 試しに ActiveHaptic をビルドする
 !idf.py -C /content/work/ActiveHaptic build 2>&1 | tail -3"""),
 code("""# 4. ESP32 ブリッジを起動する(リンクは Chrome / Edge の新しいタブで開く)
 !rm -rf /content/esp-bridge && git clone -q https://github.com/hasevr/esp-bridge /content/esp-bridge
