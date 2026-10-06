@@ -19,7 +19,7 @@ nav_order: 2
 
 ## 進め方の基本
 
-- AI(Antigravity CLI)は Colab のターミナルで `cd /content/work && agy` として起動します([事前準備](../setup.html))。
+- AI(Antigravity CLI)は Colab のターミナルで `cd /content/work && agy` として起動します([開発環境の準備](../setup.html))。
 - 最初の依頼には「**AGENTS.md を読んでから**」と添えてください。
 - **触るのは人、書き換えるのは AI** です。触った結果をできるだけ具体的な言葉で AI に返してください。
 - 依頼・AI の変更・触った結果は、ノートブックの「AI 利用の記録」の表に書いていきます。
