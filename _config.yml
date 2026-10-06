@@ -16,3 +16,4 @@ exclude:
   - README.md
   - notebooks/
   - agent/
+  - hardware/

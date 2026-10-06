@@ -34,9 +34,23 @@ nav_order: 1
 
 サンプルと、足りないもの(ハサミ、テープなど)は実験室の後ろに用意します。
 
-### 回路図(入出力部のみ)
+### 回路図(入出力部)
 
-回路図は [こちら(gyazo)](https://gyazo.com/5b68e81bcd5d81f44d12dc210db5cfd0) にあります。
+[![回路図](../assets/img/circuit-schematic.png)](../assets/img/circuit-schematic.png)
+
+[PDF](https://github.com/hasevr/ICTEx5/raw/main/hardware/haptics-circuit/haptics.pdf) /
+[KiCad のファイル](https://github.com/hasevr/ICTEx5/tree/main/hardware/haptics-circuit)
+
+- 力センサ(FSR、R4)の抵抗は押すと下がります。オペアンプ(U1 の D 回路)が
+  `ADC_OUT = 1.65 V × (1 + RV1 / R4)` に変換し、ESP32 の IO34(ADC)で読みます。押していないときは約 1.65 V。
+- 可変抵抗 RV1 で感度(押したときの値)を調整します。
+- モータはモータードライバ(U2)の AO1・AO2 の間に、4.7 Ω の抵抗(R3)と直列につながります。
+  ESP32 の IO5・IO17 から 50 kHz の PWM で駆動します。
+
+{: .note }
+この回路図は、元の図が失われたため写真とファームウェアから起こしたものです。
+力センサの片側を GND としている点など、確認事項は [KiCad のフォルダの説明](https://github.com/hasevr/ICTEx5/tree/main/hardware/haptics-circuit) を見てください。
+AI に回路の質問をするときは、この PDF を見せると具体的に答えてくれます。
 
 ## 注意点
 

@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "ICTEx5")(type "KiCad")(uri "${KIPRJMOD}/ICTEx5.kicad_sym")(options "")(descr "情報通信実験第5 の独自記号"))
+)

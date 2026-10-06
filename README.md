@@ -12,5 +12,6 @@ ESP32 とモータ・力センサで触感を提示する実験の資料です�
 | `notebooks/haptics.ipynb` | 学生が使う Colab ノートブック(`make_haptics_nb.py` で生成する) |
 | `agent/AGENTS.md` | AI エージェントへの指示(ノートブックが作業フォルダに置く) |
 | `assets/img/` | 回路・部品の写真 |
+| `hardware/haptics-circuit/` | 回路図(KiCad)。写真とファームウェアから起こしたもの |
 
 これまでの資料(後半の協調動作実験・IoT 設計制作実験を含む)は [Scrapbox](https://scrapbox.io/ICTEx5/) にあります。

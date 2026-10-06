@@ -17,6 +17,15 @@
     「ESP32 に接続」を押すよう頼む。
   - **`idf.py flash` / `idf.py monitor` は使えない**(Colab に USB は無い)。
 
+## 回路(ハードウェア)
+
+回路図: https://github.com/hasevr/ICTEx5/tree/main/hardware/haptics-circuit (PDF あり)
+- 力センサ(FSR)→ オペアンプ(NJU7044D)→ ESP32 の **IO34(ADC1 チャンネル6)**。押していないとき約 1.65 V
+  (ADC 値 1600〜2000)、押すと上がる(調整後、押して約 2500)。
+- モータードライバ TB6612FNG: **IO5 → AIN1、IO17 → AIN2(bdc_motor の 50 kHz PWM)、IO16 → PWMA(常に High)**。
+  STBY・VM・VCC は 3.3 V。モータは AO1・AO2 の間に 4.7 Ω と直列。
+- JTAG 用に IO12〜IO15 が緑の基板(FT232H)につながっているので、これらのピンを別の用途に使わない。
+
 ## 守ること
 
 - **`idf.py set-target` を実行しない。** sdkconfig が作り直され、`CONFIG_FREERTOS_HZ=1000` が消える。
