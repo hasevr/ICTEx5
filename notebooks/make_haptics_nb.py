@@ -12,34 +12,38 @@ md("""# 情報通信実験第5 触覚提示実験(Colab + AI)
 3. 左下の「ターミナル」で `cd /content/work && agy` として AI エージェントを起動する。"""),
 code("""%%bash
 # 1. ESP-IDF v5.5.1 の準備
-#    インストール済みのもの(GitHub のリリース)を取ってきて展開する。合わなければ通常のインストール(3分ほど)
+#    インストール済みの一式(GitHub のリリース。Python 本体・cmake・ninja も同梱)を取ってきて展開する。
+#    Colab の Python の版や apt のパッケージには左右されない。万一動かなければ通常のインストール(5分ほど)
 set -e
 T0=$(date +%s)
-REL=https://github.com/hasevr/ICTEx5/releases/download/colab-esp-idf-v5.5.1
+REL=https://github.com/hasevr/ICTEx5/releases/download/colab-esp-idf-v5.5.1-r2
 export IDF_TOOLS_PATH=/content/.espressif
 cd /content
 full_install() {
-  echo "通常のインストールを行います(3分ほど)"
-  PYV=$(python3 -c 'import sys;print(f"{sys.version_info[0]}.{sys.version_info[1]}")')
+  echo "通常のインストールを行います(5分ほど)"
+  PYV=$(/usr/bin/python3 -c 'import sys;print(f"{sys.version_info[0]}.{sys.version_info[1]}")')
   apt-get -qq update > /dev/null && apt-get -qq install -y flex bison gperf ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0 python3-venv python${PYV}-venv > /dev/null
   rm -rf /content/esp-idf /content/.espressif
   git clone -q -b v5.5.1 --depth 1 --recursive --shallow-submodules https://github.com/espressif/esp-idf.git /content/esp-idf
   /content/esp-idf/install.sh esp32 > /content/idf-install.log 2>&1 || { tail -30 /content/idf-install.log; exit 1; }
+  /usr/bin/python3 /content/esp-idf/tools/idf_tools.py install cmake ninja >> /content/idf-install.log 2>&1
 }
 if [ ! -d /content/esp-idf ]; then
-  # ビルドに使うツール(ninja・ccache)は Colab に入っていないので入れる
-  apt-get -qq install -y ninja-build ccache zstd > /dev/null 2>&1 || { apt-get -qq update > /dev/null; apt-get -qq install -y ninja-build ccache zstd > /dev/null; }
+  # 展開に使う zstd が無ければ入れる
+  which zstd > /dev/null || apt-get -qq install -y zstd > /dev/null 2>&1 || { apt-get -qq update > /dev/null; apt-get -qq install -y zstd > /dev/null; }
   curl -sfL "$REL/esp-idf-v5.5.1-colab.tar.zst" | tar -C /content -I zstd -x || full_install
 fi
-# どのシェル(ターミナル・AI)からでも idf.py が使えるようにする
+# どのシェル(ターミナル・AI)からでも idf.py が使えるようにする(同梱の Python を優先。ccache は使わない)
 cat > /usr/local/bin/idf.py <<'EOF'
 #!/bin/bash
 export IDF_TOOLS_PATH=/content/.espressif
+export PATH="/content/.espressif/python/bin:$PATH"
+export IDF_CCACHE_ENABLE=0
 . /content/esp-idf/export.sh > /dev/null 2>&1
 exec python3 "$IDF_PATH/tools/idf.py" "$@"
 EOF
 chmod +x /usr/local/bin/idf.py
-# 取ってきたものが動かなければ(Colab の Python の版が変わった等)、通常のインストールに切り替える
+# 取ってきたものが動かなければ、通常のインストールに切り替える
 idf.py --version > /dev/null 2>&1 || { full_install; idf.py --version > /dev/null; }
 echo "### ESP-IDF の準備: $(( $(date +%s) - T0 )) 秒($(idf.py --version))" """),
 code("""%%bash
@@ -48,7 +52,7 @@ set -e
 mkdir -p /content/work && cd /content/work
 # ビルド済みのプロジェクト一式を取ってくる(初回ビルドが速くなる)。最新のソースは git pull で取り込む
 if [ ! -d ActiveHaptic ] && [ ! -d SoftHaptics ]; then
-  curl -sfL https://github.com/hasevr/ICTEx5/releases/download/colab-esp-idf-v5.5.1/work-build-cache.tar.zst | tar -C /content -I zstd -x || echo "(ビルド済みのキャッシュなし。通常どおり用意します)"
+  curl -sfL https://github.com/hasevr/ICTEx5/releases/download/colab-esp-idf-v5.5.1-r2/work-build-cache.tar.zst | tar -C /content -I zstd -x || echo "(ビルド済みのキャッシュなし。通常どおり用意します)"
 fi
 for p in ActiveHaptic SoftHaptics; do
   if [ -d $p/.git ]; then git -C $p pull -q --ff-only || echo "$p: git pull できませんでした(手元の版で続けます)"
