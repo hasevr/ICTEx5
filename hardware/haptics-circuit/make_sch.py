@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """触覚提示実験の回路図(KiCad 8 形式)を生成する。
 
-回路は実物の写真(完成図・オペアンプ周辺・ESP32 周辺・モータードライバ周辺)とファームウェア
-(ICTEx5ActiveHaptic の main.c)のピン設定から起こしたもの。標準記号は KiCad 8.0.9 の
+ピン割り当てはファームウェア(ICTEx5ActiveHaptic の main.c)と同じ。標準記号は KiCad 8.0.9 の
 ライブラリから取り出して回路図に埋め込む(KiCad 8 以降で開ける)。
 
   python3 make_sch.py <KiCad 8 の symbols ディレクトリ(Device.kicad_sym などがある)>
@@ -222,8 +221,8 @@ class Sch:
     def write(self, path, title, comment):
         hdr = ['(kicad_sch (version 20231120) (generator "eeschema") (generator_version "8.0")',
                '(uuid "%s")' % ROOT_UUID, '(paper "A4")',
-               '(title_block (title "%s") (date "2026-10-06") (rev "1") (company "情報通信実験第5")'
-               ' (comment 1 "%s"))' % (title, comment),
+               '(title_block (title "%s") (date "2026-10-06") (rev "1") (company "情報通信実験第5")%s)'
+               % (title, ' (comment 1 "%s")' % comment if comment else ''),
                '(lib_symbols']
         hdr += [blk for blk, _ in self.libs.values()]
         hdr.append(')')
@@ -340,15 +339,11 @@ def main():
            'IO5 → AIN1、IO17 → AIN2 に 50 kHz の PWM(bdc_motor)。\n'
            'IO16 → PWMA は常に High。STBY・VM・VCC は 3.3 V。\n'
            'モータと直列の 4.7 Ω(R3)で電流を制限する。', 101.6, 114.3, 1.27)
-    s.text('起こし方と確認事項\n'
-           '・2026年度に、完成品の写真とファームウェア(ICTEx5ActiveHaptic の main.c)から起こした。元の回路図は残っていない。\n'
-           '・R4(FSR)の、U1 につながらない側の端子は、写真では電源レールのどちらの列か確定できなかった。\n'
-           '  ファームウェアが「押すと ADC 値が上がる」前提であることから GND とした(+3V3 だと逆になる)。\n'
+    s.text('補足\n'
            '・JTAG デバッガ(FT232H、緑の基板)の配線は省略。ESP32 の IO12=TDI、IO13=TCK、IO14=TMS、IO15=TDO と GND につながる。\n'
-           '・U1 の A・B・C 回路は実物でも未接続(本来は入力を GND か出力につなぐのが望ましい)。', 20.32, 167.64, 1.27)
+           '・U1 の A・B・C 回路は使わない。', 20.32, 167.64, 1.27)
 
-    s.write(os.path.join(HERE, PROJECT + '.kicad_sch'), '触覚提示実験 回路図(ActiveHaptic / SoftHaptics)',
-            '写真とファームウェアから起こした回路。確認事項は図中の注記を参照')
+    s.write(os.path.join(HERE, PROJECT + '.kicad_sch'), '触覚提示実験 回路図(ActiveHaptic / SoftHaptics)', '')
     own = [blk.replace('(symbol "ICTEx5:', '(symbol "', 1) for lid, (blk, _) in s.libs.items() if lid.startswith('ICTEx5:')]
     open(os.path.join(HERE, 'ICTEx5.kicad_sym'), 'w', encoding='utf-8').write(
         '(kicad_symbol_lib (version 20231120) (generator "make_sch.py")\n' + '\n'.join(own) + '\n)\n')

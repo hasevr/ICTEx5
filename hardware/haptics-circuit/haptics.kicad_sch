@@ -1,7 +1,7 @@
 (kicad_sch (version 20231120) (generator "eeschema") (generator_version "8.0")
 (uuid "1e2e5672-e568-5575-bfd9-203ab554c08e")
 (paper "A4")
-(title_block (title "触覚提示実験 回路図(ActiveHaptic / SoftHaptics)") (date "2026-10-06") (rev "1") (company "情報通信実験第5") (comment 1 "写真とファームウェアから起こした回路。確認事項は図中の注記を参照"))
+(title_block (title "触覚提示実験 回路図(ActiveHaptic / SoftHaptics)") (date "2026-10-06") (rev "1") (company "情報通信実験第5"))
 (lib_symbols
 (symbol "Device:R"
 		(pin_numbers hide)
@@ -1866,6 +1866,6 @@
 (text "触覚提示実験の回路(入出力部)\nESP32 の 3V3 出力(USB から)で全体を動かす。+3V3 と GND はブレッドボードの + / − 列。" (exclude_from_sim no) (at 20.32 15.24 0) (effects (font (size 2.00 2.00)) (justify left top)) (uuid "d7c6eb80-a1ff-545b-947e-51d2b20bcaf6"))
 (text "センサアンプ(U1 の D 回路)\nVREF = 3.3 V × R2/(R1+R2) = 1.65 V\nADC_OUT = VREF × (1 + RV1/R4)\n押していない(R4 = FSR ≒ ∞)とき ADC_OUT ≒ 1.65 V(ADC 値 1600〜2000)。\n押すと FSR の抵抗が下がって ADC_OUT が上がる。\nRV1 で感度を調整(押したとき約 2500)。RV1 は可変抵抗として使用。" (exclude_from_sim no) (at 101.60 88.90 0) (effects (font (size 1.27 1.27)) (justify left top)) (uuid "a1ef2e4d-3df2-5b42-8bbf-cc5202e209a1"))
 (text "モータ駆動(U2)\nIO5 → AIN1、IO17 → AIN2 に 50 kHz の PWM(bdc_motor)。\nIO16 → PWMA は常に High。STBY・VM・VCC は 3.3 V。\nモータと直列の 4.7 Ω(R3)で電流を制限する。" (exclude_from_sim no) (at 101.60 114.30 0) (effects (font (size 1.27 1.27)) (justify left top)) (uuid "23675ba5-c6d5-54d3-8514-abd19a850d3a"))
-(text "起こし方と確認事項\n・2026年度に、完成品の写真とファームウェア(ICTEx5ActiveHaptic の main.c)から起こした。元の回路図は残っていない。\n・R4(FSR)の、U1 につながらない側の端子は、写真では電源レールのどちらの列か確定できなかった。\n  ファームウェアが「押すと ADC 値が上がる」前提であることから GND とした(+3V3 だと逆になる)。\n・JTAG デバッガ(FT232H、緑の基板)の配線は省略。ESP32 の IO12=TDI、IO13=TCK、IO14=TMS、IO15=TDO と GND につながる。\n・U1 の A・B・C 回路は実物でも未接続(本来は入力を GND か出力につなぐのが望ましい)。" (exclude_from_sim no) (at 20.32 167.64 0) (effects (font (size 1.27 1.27)) (justify left top)) (uuid "4fcd3fc5-8153-59e5-a4c1-2e333990c1f7"))
+(text "補足\n・JTAG デバッガ(FT232H、緑の基板)の配線は省略。ESP32 の IO12=TDI、IO13=TCK、IO14=TMS、IO15=TDO と GND につながる。\n・U1 の A・B・C 回路は使わない。" (exclude_from_sim no) (at 20.32 167.64 0) (effects (font (size 1.27 1.27)) (justify left top)) (uuid "4fcd3fc5-8153-59e5-a4c1-2e333990c1f7"))
 (sheet_instances (path "/" (page "1")))
 )

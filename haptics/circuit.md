@@ -48,8 +48,6 @@ nav_order: 1
   ESP32 の IO5・IO17 から 50 kHz の PWM で駆動します。
 
 {: .note }
-この回路図は、元の図が失われたため写真とファームウェアから起こしたものです。
-力センサの片側を GND としている点など、確認事項は [KiCad のフォルダの説明](https://github.com/hasevr/ICTEx5/tree/main/hardware/haptics-circuit) を見てください。
 AI に回路の質問をするときは、この PDF を見せると具体的に答えてくれます。
 
 ## 注意点
