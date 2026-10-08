@@ -115,6 +115,12 @@ TB_R = [('9', 'VM', 'power_in'), ('10', 'VCC', 'power_in'), ('12', 'AO1', 'outpu
         ('15', 'BO1', 'output'), ('14', 'BO2', 'output'), ('11', 'GND', 'passive'), ('16', 'GND', 'passive')]
 
 
+# Adafruit MAX98357A ブレークアウト(1-7 が入力側の並び、8・9 が出力の端子台)。GAIN と Vin を下にまとめる
+AMP_L = [('1', 'LRC', 'input'), ('2', 'BCLK', 'input'), ('3', 'DIN', 'input'), ('5', 'SD', 'input'),
+         ('4', 'GAIN', 'input'), ('7', 'Vin', 'power_in'), ('6', 'GND', 'power_in')]
+AMP_R = [('8', 'OUT+', 'output'), ('9', 'OUT-', 'output')]
+
+
 # ------------------------------------------------------------------ 回路図の組み立て
 class Sch:
     def __init__(self):
@@ -230,7 +236,11 @@ class Sch:
         open(path, 'w', encoding='utf-8').write('\n'.join(body) + '\n')
 
 
-def main():
+def build(variant):
+    """variant: 'tb6612'(モータードライバで駆動、標準)/ 'i2s'(D 級アンプ MAX98357A で駆動、参考)"""
+    global PROJECT, ROOT_UUID
+    PROJECT = 'haptics' if variant == 'tb6612' else 'haptics_i2s'
+    ROOT_UUID = str(uuid.uuid5(NS, 'root' if variant == 'tb6612' else 'root-i2s'))
     s = Sch()
     for lib, name, new in [('Device', 'R', None), ('Device', 'R_Potentiometer', None), ('Device', 'R_Variable', None),
                            ('Amplifier_Operational', 'LM2902', None), ('Motor', 'Motor_DC', None),
@@ -238,13 +248,22 @@ def main():
         s.add_lib(*lib_symbol(lib, name, new))
     s.add_lib(*box_symbol('ESP32-DevKitC', 'U', 'ESP32-DevKitC', ESP_L, ESP_R, width=25.4,
                           desc='Espressif ESP32-DevKitC (ESP32-WROOM-32)'))
-    s.add_lib(*box_symbol('TB6612FNG_Breakout', 'U', 'TB6612FNG Breakout', TB_L, TB_R, width=17.78,
-                          desc='SparkFun TB6612FNG motor driver breakout'))
+    if variant == 'tb6612':
+        s.add_lib(*box_symbol('TB6612FNG_Breakout', 'U', 'TB6612FNG Breakout', TB_L, TB_R, width=17.78,
+                              desc='SparkFun TB6612FNG motor driver breakout'))
+    else:
+        s.add_lib(*lib_symbol('Device', 'C_Polarized'))
+        s.add_lib(*box_symbol('MAX98357A_Breakout', 'U', 'MAX98357A Breakout', AMP_L, AMP_R, width=17.78,
+                              desc='Adafruit I2S 3W Class D Amplifier Breakout (MAX98357A)'))
     W, J, P = s.wires, s.junction, s.pp
 
     # ---------------------------------------------------------------- ESP32(左)
     esp = s.symbol('ICTEx5:ESP32-DevKitC', 'U3', 'ESP32-DevKitC', 60.96, 101.6, ref_off=(0, -29.21), val_off=(0, 29.21))
-    used = {'1': '+3V3', '14': 'GND', '5': 'ADC_OUT', '29': 'AIN1', '30': 'AIN2', '31': 'PWMA', '20': 'GND', '26': 'GND'}
+    used = {'1': '+3V3', '14': 'GND', '5': 'ADC_OUT', '20': 'GND', '26': 'GND'}
+    if variant == 'tb6612':
+        used.update({'29': 'AIN1', '30': 'AIN2', '31': 'PWMA'})
+    else:
+        used.update({'10': 'I2S_BCLK', '9': 'I2S_LRC', '22': 'I2S_DIN'})
     for num, _, _ in ESP_L + ESP_R:
         if used.get(num) in ('+3V3', 'GND'):
             s.connect_elbow(esp, num, used[num])
@@ -290,34 +309,39 @@ def main():
         for n in ins + (out,):
             s.connect(c, n, None)
 
-    # ---------------------------------------------------------------- モータードライバ(中央下)
-    tb = s.symbol('ICTEx5:TB6612FNG_Breakout', 'U2', 'TB6612FNG Breakout', 162.56, 137.16, ref_off=(0, -13.97), val_off=(0, 13.97))
-    for num, net in {'1': 'PWMA', '2': 'AIN2', '3': 'AIN1', '5': None, '6': None, '7': None, '14': None, '15': None}.items():
-        s.connect(tb, num, net)
-    # STBY → +3V3、左下の GND
-    s.connect_elbow(tb, '4', '+3V3')
-    s.connect_elbow(tb, '8', 'GND')
-    # VM・VCC をまとめて +3V3
-    vm, vcc = P(tb, '9'), P(tb, '10')
-    bx = vm[0] + 5.08
-    W(vm, (bx, vm[1])); W(vcc, (bx, vcc[1])); W((bx, vcc[1]), (bx, vm[1])); J(bx, vm[1])
-    W((bx, vm[1]), (bx, vm[1] - 5.08)); s.power('+3V3', bx, vm[1] - 5.08, (0, -1))
-    # 右下の GND 2本をまとめて GND
-    g1, g2 = P(tb, '11'), P(tb, '16')
-    W(g1, (bx, g1[1])); W(g2, (bx, g2[1])); W((bx, g1[1]), (bx, g2[1])); J(bx, g2[1])
-    W((bx, g2[1]), (bx, g2[1] + 5.08)); s.power('GND', bx, g2[1] + 5.08, (0, 1))
-    # AO1 → R3(4.7 Ω)→ M1 → AO2
-    ao1, ao2 = P(tb, '12'), P(tb, '13')
-    r3 = s.symbol('Device:R', 'R3', '4.7', ao1[0] + 17.78, ao1[1], rot=90, ref_off=(0, -3.81), val_off=(0, -1.905 + 4.445))
-    W(ao1, P(r3, '1' if P(r3, '1')[0] < P(r3, '2')[0] else '2'))
-    r3r = max(P(r3, '1'), P(r3, '2'))
-    mxm = r3r[0] + 7.62
-    m1 = s.symbol('Motor:Motor_DC', 'M1', 'Motor_DC', mxm, ao1[1] + 10.16, ref_off=(5.08, -1.27), val_off=(5.08, 1.27))
-    m_top, m_bot = sorted([P(m1, '1'), P(m1, '2')], key=lambda p: p[1])
-    W(r3r, (mxm, r3r[1])); W((mxm, r3r[1]), m_top)
-    rx = ao2[0] + 10.16
-    W(m_bot, (mxm, m_bot[1] + 2.54)); W((mxm, m_bot[1] + 2.54), (rx, m_bot[1] + 2.54))
-    W((rx, m_bot[1] + 2.54), (rx, ao2[1])); W((rx, ao2[1]), ao2)
+    if variant == 'tb6612':
+        # ---------------------------------------------------------------- モータードライバ(中央下)
+        tb = s.symbol('ICTEx5:TB6612FNG_Breakout', 'U2', 'TB6612FNG Breakout', 162.56, 137.16, ref_off=(0, -13.97), val_off=(0, 13.97))
+        for num, net in {'1': 'PWMA', '2': 'AIN2', '3': 'AIN1', '5': None, '6': None, '7': None, '14': None, '15': None}.items():
+            s.connect(tb, num, net)
+        # STBY → +3V3、左下の GND
+        s.connect_elbow(tb, '4', '+3V3')
+        s.connect_elbow(tb, '8', 'GND')
+        # VM・VCC をまとめて +3V3
+        vm, vcc = P(tb, '9'), P(tb, '10')
+        bx = vm[0] + 5.08
+        W(vm, (bx, vm[1])); W(vcc, (bx, vcc[1])); W((bx, vcc[1]), (bx, vm[1])); J(bx, vm[1])
+        W((bx, vm[1]), (bx, vm[1] - 5.08)); s.power('+3V3', bx, vm[1] - 5.08, (0, -1))
+        # 右下の GND 2本をまとめて GND
+        g1, g2 = P(tb, '11'), P(tb, '16')
+        W(g1, (bx, g1[1])); W(g2, (bx, g2[1])); W((bx, g1[1]), (bx, g2[1])); J(bx, g2[1])
+        W((bx, g2[1]), (bx, g2[1] + 5.08)); s.power('GND', bx, g2[1] + 5.08, (0, 1))
+        # AO1 → R3(4.7 Ω)→ M1 → AO2
+        ao1, ao2 = P(tb, '12'), P(tb, '13')
+        r3 = s.symbol('Device:R', 'R3', '4.7', ao1[0] + 17.78, ao1[1], rot=90, ref_off=(0, -3.81), val_off=(0, -1.905 + 4.445))
+        W(ao1, P(r3, '1' if P(r3, '1')[0] < P(r3, '2')[0] else '2'))
+        r3r = max(P(r3, '1'), P(r3, '2'))
+        mxm = r3r[0] + 7.62
+        m1 = s.symbol('Motor:Motor_DC', 'M1', 'Motor_DC', mxm, ao1[1] + 10.16, ref_off=(5.08, -1.27), val_off=(5.08, 1.27))
+        m_top, m_bot = sorted([P(m1, '1'), P(m1, '2')], key=lambda p: p[1])
+        W(r3r, (mxm, r3r[1])); W((mxm, r3r[1]), m_top)
+        rx = ao2[0] + 10.16
+        W(m_bot, (mxm, m_bot[1] + 2.54)); W((mxm, m_bot[1] + 2.54), (rx, m_bot[1] + 2.54))
+        W((rx, m_bot[1] + 2.54), (rx, ao2[1])); W((rx, ao2[1]), ao2)
+
+
+    else:
+        i2s_amp(s)
 
     # 電源フラグ(ESP32 の 3V3 出力と GND を電源として扱う)
     for i, net in enumerate(['+3V3', 'GND']):
@@ -325,6 +349,7 @@ def main():
         s.power(net, x0, y0, (0, -1) if net == '+3V3' else (0, 1))
         s.wires((x0, y0), (x0 + 7.62, y0))
         s.symbol('power:PWR_FLAG', '#FLG%02d' % (i + 1), 'PWR_FLAG', x0 + 7.62, y0, ref_off=(0, -6.35), val_off=(0, -3.81))
+
 
     # ---------------------------------------------------------------- 注記
     s.text('触覚提示実験の回路(入出力部)\n'
@@ -335,21 +360,68 @@ def main():
            '押していない(R4 = FSR ≒ ∞)とき ADC_OUT ≒ 1.65 V(ADC 値 1600〜2000)。\n'
            '押すと FSR の抵抗が下がって ADC_OUT が上がる。\n'
            'RV1 で感度を調整(押したとき約 2500)。RV1 は可変抵抗として使用。', 101.6, 88.9, 1.27)
-    s.text('モータ駆動(U2)\n'
-           'IO5 → AIN1、IO17 → AIN2 に 50 kHz の PWM(bdc_motor)。\n'
-           'IO16 → PWMA は常に High。STBY・VM・VCC は 3.3 V。\n'
-           'モータと直列の 4.7 Ω(R3)で電流を制限する。', 101.6, 114.3, 1.27)
+    if variant == 'tb6612':
+        s.text('モータ駆動(U2)\n'
+               'IO5 → AIN1、IO17 → AIN2 に 50 kHz の PWM(bdc_motor)。\n'
+               'IO16 → PWMA は常に High。STBY・VM・VCC は 3.3 V。\n'
+               'モータと直列の 4.7 Ω(R3)で電流を制限する。', 101.6, 114.3, 1.27)
+    else:
+        s.text('D 級アンプでの駆動(U2、参考)\n'
+               'ESP32 から I2S(16 kHz、16 bit)で波形を送り、MAX98357A で増幅する。\n'
+               '電源は 3.3 V(5 V にしない)。GAIN を Vin につないで 6 dB。SD は基板のプルアップのまま。\n'
+               'アクチュエータ(モータ・LRA・スピーカー)と直列の 10 Ω(R3)で電流を制限する。\n'
+               '最悪の電流は 3.3 V ÷(10 Ω + アクチュエータの抵抗)。C1 は電源の瞬間的な電流を補う。', 101.6, 114.3, 1.27)
     s.text('補足\n'
            '・JTAG デバッガ(FT232H、緑の基板)の配線は省略。ESP32 の IO12=TDI、IO13=TCK、IO14=TMS、IO15=TDO と GND につながる。\n'
            '・U1 の A・B・C 回路は使わない。', 20.32, 167.64, 1.27)
 
-    s.write(os.path.join(HERE, PROJECT + '.kicad_sch'), '触覚提示実験 回路図(ActiveHaptic / SoftHaptics)', '')
+    title = {'tb6612': '触覚提示実験 回路図(ActiveHaptic / SoftHaptics)',
+             'i2s': '触覚提示実験 回路図(D 級アンプ MAX98357A で駆動する版・参考)'}[variant]
+    s.write(os.path.join(HERE, PROJECT + '.kicad_sch'), title, '')
+    open(os.path.join(HERE, PROJECT + '.kicad_pro'), 'w').write('{\n  "meta": {\n    "filename": "%s.kicad_pro",\n    "version": 1\n  }\n}\n' % PROJECT)
+    return s
+
+
+def i2s_amp(s):
+    """MAX98357A ブレークアウトと、10 Ω・アクチュエータ・電源のコンデンサ。"""
+    W, J, P = s.wires, s.junction, s.pp
+    amp = s.symbol('ICTEx5:MAX98357A_Breakout', 'U2', 'MAX98357A Breakout', 162.56, 137.16, ref_off=(0, -11.43), val_off=(0, 11.43))
+    for num, net in {'1': 'I2S_LRC', '2': 'I2S_BCLK', '3': 'I2S_DIN', '5': None}.items():
+        s.connect(amp, num, net)
+    # GAIN と Vin をまとめて +3V3(6 dB)、GND
+    g, v = P(amp, '4'), P(amp, '7')
+    bx = g[0] - 5.08
+    W(g, (bx, g[1])); W(v, (bx, v[1])); W((bx, g[1]), (bx, v[1])); J(bx, v[1])
+    s.connect_elbow(amp, '6', 'GND')
+    # 電源のコンデンサ(470 uF)。+ 側を Vin の線につなぎ、そこから +3V3 へ(信号のラベルと重ならない位置)
+    cx = bx - 20.32
+    c1 = s.symbol('Device:C_Polarized', 'C1', '470u', cx, v[1] + 3.81, ref_off=(3.81, -1.27), val_off=(3.81, 1.27))
+    W((bx, v[1]), (cx, v[1])); J(cx, v[1])
+    W((cx, v[1]), (cx, v[1] - 2.54)); s.power('+3V3', cx, v[1] - 2.54, (0, -1))
+    s.connect(c1, '2', 'GND', stub=2.54)
+    # OUT+ → R3(10 Ω)→ アクチュエータ → OUT−
+    op, om = P(amp, '8'), P(amp, '9')
+    r3 = s.symbol('Device:R', 'R3', '10', op[0] + 17.78, op[1], rot=90, ref_off=(0, -3.81), val_off=(0, 2.54))
+    W(op, min(P(r3, '1'), P(r3, '2')))
+    r3r = max(P(r3, '1'), P(r3, '2'))
+    mxm = r3r[0] + 7.62
+    m1 = s.symbol('Motor:Motor_DC', 'M1', 'モータ / LRA / スピーカー', mxm, op[1] + 10.16, ref_off=(5.08, -1.27), val_off=(5.08, 1.27))
+    m_top, m_bot = sorted([P(m1, '1'), P(m1, '2')], key=lambda p: p[1])
+    W(r3r, (mxm, r3r[1]), m_top)
+    rx = om[0] + 10.16
+    W(m_bot, (mxm, m_bot[1] + 2.54), (rx, m_bot[1] + 2.54), (rx, om[1]), om)
+
+
+def main():
+    for variant in ('tb6612', 'i2s'):
+        s = build(variant)
     own = [blk.replace('(symbol "ICTEx5:', '(symbol "', 1) for lid, (blk, _) in s.libs.items() if lid.startswith('ICTEx5:')]
+    own += [box_symbol('TB6612FNG_Breakout', 'U', 'TB6612FNG Breakout', TB_L, TB_R, width=17.78,
+                       desc='SparkFun TB6612FNG motor driver breakout')[1].replace('(symbol "ICTEx5:', '(symbol "', 1)]
     open(os.path.join(HERE, 'ICTEx5.kicad_sym'), 'w', encoding='utf-8').write(
         '(kicad_symbol_lib (version 20231120) (generator "make_sch.py")\n' + '\n'.join(own) + '\n)\n')
     open(os.path.join(HERE, 'sym-lib-table'), 'w').write(
         '(sym_lib_table\n  (version 7)\n  (lib (name "ICTEx5")(type "KiCad")(uri "${KIPRJMOD}/ICTEx5.kicad_sym")(options "")(descr "情報通信実験第5 の独自記号"))\n)\n')
-    open(os.path.join(HERE, PROJECT + '.kicad_pro'), 'w').write('{\n  "meta": {\n    "filename": "%s.kicad_pro",\n    "version": 1\n  }\n}\n' % PROJECT)
 
 
 if __name__ == '__main__':
