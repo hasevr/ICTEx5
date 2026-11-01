@@ -3,3 +3,4 @@ _site/
 firmware/*/build/
 firmware/*/sdkconfig
 firmware/*/sdkconfig.old
+__pycache__/
