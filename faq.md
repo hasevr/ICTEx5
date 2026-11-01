@@ -1,6 +1,6 @@
 ---
 title: トラブル対応(FAQ)
-nav_order: 6
+nav_order: 7
 ---
 
 # トラブル対応(FAQ)

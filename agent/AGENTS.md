@@ -1,4 +1,4 @@
-# 情報通信実験第5 触覚提示実験 — AI エージェントへの指示
+# 情報通信実験第5(触覚提示実験・協調動作実験)— AI エージェントへの指示
 
 あなたは学生の実験を手伝うコーディングエージェントです。Google Colab の VM(Ubuntu)で動いています。
 説明・報告は日本語で、短く書いてください。
@@ -6,8 +6,10 @@
 ## 環境
 
 - ESP-IDF v5.5.1: `/content/esp-idf`。`idf.py` はどのシェルからでもそのまま使える(ラッパー済み)。
-- プロジェクト: `/content/work/ActiveHaptic`(クリック感の提示)、`/content/work/SoftHaptics`(柔らかさの提示)。
-  どちらも ESP32 用で、`main/main.c` が本体。
+- プロジェクト(どれも ESP32 用で、`main/main.c` が本体):
+  - 触覚提示実験: `/content/work/ActiveHaptic`(クリック感の提示)、`/content/work/SoftHaptics`(柔らかさの提示)
+  - 協調動作実験: `/content/work/HttpHaptic`(ActiveHaptic + 無線LAN + HTTP)と、
+    Raspberry Pi で動かす Web サーバ `/content/work/server/app.py`(Python + Flask)
 - **ESP32 は学生の PC に USB でつながっている。Colab からは esp-bridge 経由でしか触れない。**
   - 書き込み: プロジェクトで `idf.py build` → `esp flash <プロジェクトのパス>`
     (学生がブラウザで承認するまで待つ。拒否されたら理由を聞く)
@@ -39,3 +41,19 @@
 - **触感・音はあなたには分からない。** 評価が必要なときは、何を確かめてほしいかを具体的に学生に頼み、
   学生の言葉での報告をもとに次の変更を決める。
 - センサの値(ADC)の調整が必要なときは、`esp log` の数値を根拠に提案する。
+
+## 協調動作実験(HttpHaptic と Raspberry Pi のサーバ)
+
+- 構成: ESP32(実験室の無線LAN `ICT_EX5_2G`、2.4 GHz)→ HTTP GET `/getadc?ADC=..&TIME=..` →
+  Raspberry Pi(有線LAN、`app.py`、ポート 50000)。サーバの応答 JSON の `"freq"` で ESP32 の振動の周波数が変わる。
+- **あなた(Colab)は Raspberry Pi にも実験室のネットワークにも届かない。** `app.py` を書き換えたら、学生に
+  ノートブックのセルでダウンロードして `scp app.py pi@ictex5-NN.local:ICTEx5/server/` で送り、
+  Raspberry Pi で `python3 app.py` を起動し直すよう頼む。サーバの出力やブラウザの表示は学生に聞く。
+- Raspberry Pi の Python は 3.11 以降で、Flask は apt の `python3-flask`。**pip で新しいライブラリを入れる前提にしない**
+  (インターネットへの接続や権限で失敗することがある)。グラフはブラウザ側(Chart.js)で描いている。
+- HttpHaptic の設定はシリアルのコマンドで変え、NVS に保存される: `server HOST:PORT`、`interval MS`、
+  `wifi SSID PASSWORD`、`show`。`esp send "server 10.0.1.23:50000\n"` のように改行を付けて送る。
+  Raspberry Pi の IP アドレスを main.c に書き込まない。
+- 触覚提示の処理(hapticTask)はコア1で 1 kHz。通信の処理を hapticTask の中に入れない。値を貯めて送るなら、
+  hapticTask からはリングバッファなどに書くだけにし、送るのは別のタスクで行う。
+- 通信の速さ・遅れは、`esp log` の `rtt` とサーバ側の記録で学生が測る。推測の数値を事実のように報告しない。

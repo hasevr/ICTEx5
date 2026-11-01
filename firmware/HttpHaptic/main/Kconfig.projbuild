@@ -1,0 +1,14 @@
+menu "HttpHaptic"
+    config HH_WIFI_SSID
+        string "Wi-Fi SSID (2.4 GHz)"
+        default "ICT_EX5_2G"
+    config HH_WIFI_PASSWORD
+        string "Wi-Fi password"
+        default "embedded"
+    config HH_SERVER
+        string "Server (host:port), e.g. 10.0.1.23:50000. Can be changed with the 'server' command."
+        default ""
+    config HH_INTERVAL_MS
+        int "Interval between requests [ms]"
+        default 500
+endmenu

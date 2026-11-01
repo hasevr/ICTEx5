@@ -1,6 +1,6 @@
 ---
 title: 部品一覧
-nav_order: 5
+nav_order: 6
 ---
 
 # 部品一覧

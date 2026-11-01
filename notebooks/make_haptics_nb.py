@@ -1,4 +1,4 @@
-# notebooks/haptics.ipynb を生成する(編集はこのスクリプトで行う)
+# notebooks/haptics.ipynb を生成する(編集はこのスクリプトで行う)。共通のセルは make_coop_nb.py からも使う
 import json
 def md(s): return {"cell_type": "markdown", "metadata": {}, "source": s}
 def code(s): return {"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": s}
@@ -104,6 +104,11 @@ Drive に保存できないので、終わったら「ファイル → ダウン
 |---|---|---|---|
 | | | | |"""),
 ]
-nb = {"cells": cells, "metadata": {"colab": {"provenance": []}, "kernelspec": {"name": "python3", "display_name": "Python 3"},
-      "language_info": {"name": "python"}}, "nbformat": 4, "nbformat_minor": 0}
-json.dump(nb, open(__file__.replace('make_haptics_nb.py', 'haptics.ipynb'), 'w'), ensure_ascii=False, indent=1)
+def save(cells, name):
+    nb = {"cells": cells, "metadata": {"colab": {"provenance": []}, "kernelspec": {"name": "python3", "display_name": "Python 3"},
+          "language_info": {"name": "python"}}, "nbformat": 4, "nbformat_minor": 0}
+    import os
+    json.dump(nb, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), name), 'w'), ensure_ascii=False, indent=1)
+
+if __name__ == '__main__':
+    save(cells, 'haptics.ipynb')
