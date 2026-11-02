@@ -19,7 +19,7 @@ nav_order: 2
 - AI は Colab のターミナルで `cd /content/work && agy` として起動します。最初の依頼には「**AGENTS.md を読んでから**」と添えてください。
 - ESP32 のプログラムは `/content/work/HttpHaptic/main/main.c`、Raspberry Pi のプログラムは `/content/work/server/app.py` です。
 - **Raspberry Pi へのプログラムの送り方**: AI が `app.py` を書き換えたら、ノートブックの「サーバのプログラムを PC にダウンロードする」
-  セルでダウンロードし、PC から `scp app.py pi@ictex5-NN.local:` で送ります([準備と動作確認](setup.html) の 4. と同じ)。
+  セルでダウンロードし、PC から `scp app.py pi@10.0.1.23:`(IP アドレスは自分の Raspberry Pi の画面に出たもの) で送ります([準備と動作確認](setup.html) の 4. と同じ)。
   Raspberry Pi で `Ctrl+C` してから `python3 app.py` で起動し直すと反映されます。
   小さな変更なら、Raspberry Pi 上で `nano app.py` として直接書き換えてもかまいません。
   `app.py` は Python の標準ライブラリ(`http.server`)だけで書かれています。Raspberry Pi にライブラリを追加しなくて済むよう、

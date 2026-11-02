@@ -30,47 +30,46 @@ nav_order: 1
 
 ## 2. Raspberry Pi の SD カードを作る
 
-キットの Raspberry Pi 3 の SD カードに、OS(Raspberry Pi OS Lite)を書き込みます。
-書き込むときに、ホスト名・ユーザー・SSH の設定もしておくので、ディスプレイとキーボードはつながずに使えます。
+実験室で配る **USB メモリの中のイメージファイル `ictex5-coop.img.xz`** を、キットの Raspberry Pi 3 の SD カードに書き込みます。
+このイメージは Raspberry Pi OS Lite に、この実験用の設定(ユーザー `pi`、SSH、画面への IP アドレスの表示)を加えたものです。
+書き込むときに設定することは何もありません。
 
-1. PC に [Raspberry Pi Imager](https://www.raspberrypi.com/software/) をインストールする(この実験で PC に入れるのはこれだけです)。
-2. SD カードを、カードリーダー(実験室で貸し出します)で PC につなぐ。
-3. Raspberry Pi Imager で次を選ぶ。
-   - デバイス: **Raspberry Pi 3**
-   - OS: **Raspberry Pi OS (other) → Raspberry Pi OS Lite (64-bit)**(デスクトップの無い版)。
-     実験室で USB メモリを配っている場合は、**Use custom** を選び、USB メモリの中のイメージファイル(`.img.xz`)を選ぶ(ダウンロードを待たずに済む)
-   - ストレージ: つないだ SD カード(容量で確かめる。**PC の他のディスクを選ばないこと**)
-4. 「OS のカスタマイズ」(「設定を編集する」)で次を設定する。
-   - ホスト名: **`ictex5-NN`**(`NN` はキットの番号。他の人と重ならないこと)
-   - ユーザー名 **`pi`** と、自分で決めたパスワード(忘れないようメモしておく)
-   - 無線LAN の設定: しない(有線LAN でつなぐ)
-   - ロケール: タイムゾーン `Asia/Tokyo`、キーボード `jp`
-   - サービス(リモートアクセス): **SSH を有効にする**(パスワード認証を使う)。
-     **初期設定では無効です。** ホスト名やユーザーとは別のタブ(Imager の版によっては別の画面)にあるので、開き忘れに注意。
-5. 書き込む前に「OS のカスタマイズを適用しますか」と聞かれたら **「はい」**。「いいえ」を選ぶと、ここまでの設定がすべて使われません。
-6. 書き込む(5〜10分)。終わったら SD カードを取り出し、Raspberry Pi に挿す。
+1. PC に書き込みツール [balenaEtcher](https://etcher.balena.io/) をインストールする(この実験で PC に入れるのはこれだけです)。
+2. USB メモリから `ictex5-coop.img.xz` を PC にコピーする(展開しなくてよい)。
+3. SD カードを、カードリーダー(実験室で貸し出します)で PC につなぐ。
+4. balenaEtcher で「Flash from file」→ `ictex5-coop.img.xz`、「Select target」→ SD カード(**容量で確かめる。PC の他のディスクを選ばないこと**)、
+   「Flash!」。5〜10分かかります。
+5. 終わったら SD カードを取り出し、Raspberry Pi に挿す。
 
 書き込みを待つ間に、1. のノートブックや 5. の ESP32 の書き込みを進めておくと効率的です。
 
-## 3. Raspberry Pi を起動して、PC から SSH でつなぐ
+{: .note }
+Raspberry Pi Imager で書き込んでもかまいません。その場合は OS に「Use custom」でこのファイルを選び、
+「OS のカスタマイズを適用しますか」には **「いいえ」** と答えてください(「はい」にすると、このイメージの設定が上書きされます)。
 
-1. **LAN ケーブル**で Raspberry Pi と机のハブをつなぐ。
+## 3. Raspberry Pi を起動して、画面で IP アドレスを確かめ、SSH でつなぐ
+
+1. **ディスプレイ**(実験室のもの)を HDMI-DVI ケーブルで、**LAN ケーブル**を机のハブに、それぞれ Raspberry Pi につなぐ。
+   ディスプレイの入力を Raspberry Pi に切り替える。**電源を入れる前につなぐ**こと(後からつなぐと画面が出ないことがあります)。
 2. **電源**をつなぐ。キットの **5 V 3 A の USB 電源**と Micro USB ケーブルを使います(PC の USB からでは電流が足りず、不安定になります)。
-   初回の起動は 2〜3 分かかります。
-3. PC の **PowerShell**(Windows)か **ターミナル**(Mac)で、SSH でログインする。パスワードは 2. で決めたものです。
+3. 初回の起動は 3〜5 分かかります(途中で一度再起動することがあります)。しばらくすると、画面に次のように表示されます。
    ```
-   ssh pi@ictex5-NN.local
+     ICTEx5 Raspberry Pi
+     IP address : 10.0.1.23
+     Host name  : ictex5-a1b2
+     Connect from your PC:  ssh pi@10.0.1.23
+   ```
+   この **IP アドレス**を、以後のすべて(SSH、ファイルの転送、ブラウザ、ESP32 の宛先)で使います。メモしておいてください。
+   IP アドレスは毎回同じとは限りません。次回も、起動したら画面で確かめます。キーボードは要りません。
+4. PC の **PowerShell**(Windows)か **ターミナル**(Mac)で SSH でログインする。パスワードは実験室で案内します。
+   ```
+   ssh pi@10.0.1.23
    ```
    初回は `Are you sure you want to continue connecting (yes/no)?` と聞かれるので `yes` と入力します。
-4. Raspberry Pi の **IP アドレス**を調べる。ESP32 から Raspberry Pi に送るときに使います。
-   ```
-   hostname -I
-   ```
-   `10.0.1.23` のような数字が出ます(人によって違います。次回も同じとは限りません)。
 
 {: .note }
-`ictex5-NN.local` で見つからないときは、1分ほど待ってからもう一度試してください。それでもだめなら、下の「うまくいかないとき」の方法で
-IP アドレスを調べ、`ssh pi@10.0.1.23` のように IP アドレスで接続します。
+同じネットワークの環境によっては、IP アドレスの代わりにホスト名(`ssh pi@ictex5-a1b2.local`)でもつながります。
+つながればどちらを使ってもかまいません。
 
 ## 4. Raspberry Pi で Web サーバを動かす
 
@@ -82,7 +81,7 @@ PC から `scp` で Raspberry Pi に送って起動します。AI が書き換�
 2. PC の PowerShell(Mac は ターミナル)で、ダウンロードのフォルダに移って Raspberry Pi に送る。
    ```
    cd ~/Downloads
-   scp app.py pi@ictex5-NN.local:
+   scp app.py pi@10.0.1.23:
    ```
    (最後の `:` を忘れないこと。Raspberry Pi のホームフォルダに送られます)
 3. SSH でログインした Raspberry Pi で起動する。
@@ -93,7 +92,7 @@ PC から `scp` で Raspberry Pi に送って起動します。AI が書き換�
 `Running on http://...:50000` と出たら、PC のブラウザで次を開きます。
 
 ```
-http://ictex5-NN.local:50000/
+http://10.0.1.23:50000/
 ```
 
 「ESP32 から届いた力センサの値」というページが出れば成功です(まだ何も届いていないので、グラフは空です)。
@@ -106,7 +105,7 @@ ESP32 から値を受け取る `/getadc`、グラフのページ `/`、周波数
 ## 5. ESP32 に HttpHaptic を書き込んで、サーバの宛先を設定する
 
 ノートブックの「手で書き込む・設定する・出力を見る」のセル、または AI に頼んで、次の3つを行います
-(`10.0.1.23` は 3. で調べた IP アドレスに置き換える)。
+(`10.0.1.23` は 3. で画面に出た IP アドレスに置き換える)。
 
 ```
 esp flash /content/work/HttpHaptic
@@ -140,9 +139,10 @@ I (6201) HTTP: status=200 rtt=12.3 ms ADC=1934 resp={"adc":1934,"freq":0.0}
 | `esp log` に `Server is not set` | 5. の `server` コマンドを送ったか |
 | `HTTP failed: ESP_ERR_HTTP_CONNECT` | IP アドレスとポート(`:50000`)が正しいか。Raspberry Pi でサーバ(`app.py`)が動いているか |
 | `Wi-Fi disconnected, retrying` が続く | 無線LAN の名前とパスワード(`show` で確認)。別の無線LAN にするときは `esp send "wifi 名前 パスワード\n"` |
-| ブラウザでページが開かない | PC が実験室の無線LAN につながっているか。`ictex5-NN.local` の代わりに IP アドレスで開く |
+| ブラウザでページが開かない | PC が実験室の無線LAN につながっているか。URL の IP アドレスとポート(`:50000`)が正しいか |
 | サーバに `Address already in use` | 前の `app.py` が動いたまま。`pkill -f app.py` で止めてから起動し直す |
-| `ssh` で `Connection refused` | 名前は見つかったが SSH が無効。4. の SSH の設定か、5. の「はい」を忘れている。SD カードに書き込み直す |
-| `ictex5-NN.local` が見つからない | 1分ほど待つ。それでもだめなら、実験室のディスプレイに HDMI-DVI ケーブルで、キーボードを USB でつなぎ、`pi` でログインして `hostname -I` で IP アドレスを調べる。以後は名前の代わりに IP アドレスを使う |
+| `ssh` で `Connection refused` | 初回の起動の設定がまだ終わっていない。1〜2分待ってから試す。画面に IP アドレスが出てからつなぐ |
+| 画面の IP address が空のまま | LAN ケーブルがハブにつながっているか。ハブの電源。ケーブルを挿し直して1分待つ |
+| 画面に何も出ない | 電源を入れる前にディスプレイをつないだか。ディスプレイの入力の切り替え。電源を抜いて挿し直す |
 
 実験が終わったら、Raspberry Pi で `sudo shutdown now` を実行し、20 秒ほど待ってから電源を抜いてください。

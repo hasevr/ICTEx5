@@ -1,0 +1,60 @@
+#cloud-config
+# 情報通信実験第5 協調動作実験用(https://hasevr.github.io/ICTEx5/coop/)
+# 初回の起動で: ユーザー pi(共通パスワード)、SSH を有効、ホスト名を ictex5-<MAC 末尾4桁> に、
+# ログイン画面(ディスプレイ)に IP アドレスとホスト名を表示する。
+preserve_hostname: true
+manage_etc_hosts: false
+timezone: Asia/Tokyo
+keyboard:
+  model: pc105
+  layout: jp
+users:
+- name: pi
+  groups: users,adm,dialout,audio,netdev,video,plugdev,cdrom,games,input,gpio,spi,i2c,render,sudo
+  shell: /bin/bash
+  lock_passwd: false
+  passwd: $6$...  # openssl passwd -6 '<パスワード>' で作ったハッシュに置き換える(パスワードは教員用 Scrapbox)
+  sudo: ALL=(ALL) NOPASSWD:ALL
+ssh_pwauth: true
+write_files:
+- path: /etc/issue
+  permissions: '0644'
+  content: |
+    \S{PRETTY_NAME} \n \l
+
+      ICTEx5 Raspberry Pi
+      IP address : \4
+      Host name  : \n
+      Connect from your PC:  ssh pi@\4
+
+- path: /usr/local/sbin/ictex5-hostname
+  permissions: '0755'
+  content: |
+    #!/bin/sh
+    # ホスト名を ictex5-<有線LAN の MAC アドレスの末尾4桁> にする(全員が同じイメージでも名前が重ならない)
+    mac=$(cat /sys/class/net/eth0/address 2>/dev/null || cat /sys/class/net/wlan0/address)
+    h=ictex5-$(echo "$mac" | tr -d ':' | tail -c 5)
+    hostnamectl set-hostname "$h"
+    if grep -q '^127\.0\.1\.1' /etc/hosts; then sed -i "s/^127\.0\.1\.1.*/127.0.1.1\t$h/" /etc/hosts
+    else printf '127.0.1.1\t%s\n' "$h" >> /etc/hosts; fi
+    systemctl try-restart avahi-daemon 2>/dev/null || true
+- path: /etc/systemd/system/ictex5-show-ip.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Show the IP address on the login screen (ICTEx5)
+    After=network-online.target getty@tty1.service
+    Wants=network-online.target
+
+    [Service]
+    Type=oneshot
+    ExecStart=/bin/sh -c 'for i in $(seq 60); do hostname -I | grep -q . && break; sleep 2; done; systemctl restart getty@tty1'
+
+    [Install]
+    WantedBy=multi-user.target
+runcmd:
+- [/usr/local/sbin/ictex5-hostname]
+- [systemctl, enable, --now, ssh]
+- [systemctl, daemon-reload]
+- [systemctl, enable, ictex5-show-ip.service]
+- [systemctl, start, --no-block, ictex5-show-ip.service]

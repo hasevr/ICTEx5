@@ -47,7 +47,7 @@
 - 構成: ESP32(実験室の無線LAN `ICT_EX5_2G`、2.4 GHz)→ HTTP GET `/getadc?ADC=..&TIME=..` →
   Raspberry Pi(有線LAN、`app.py`、ポート 50000)。サーバの応答 JSON の `"freq"` で ESP32 の振動の周波数が変わる。
 - **あなた(Colab)は Raspberry Pi にも実験室のネットワークにも届かない。** `app.py` を書き換えたら、学生に
-  ノートブックのセルでダウンロードして `scp app.py pi@ictex5-NN.local:` で送り、
+  ノートブックのセルでダウンロードして `scp app.py pi@<Raspberry Pi の IP アドレス>:` で送り、
   Raspberry Pi で `python3 app.py` を起動し直すよう頼む。サーバの出力やブラウザの表示は学生に聞く。
 - `app.py` は Python の標準ライブラリ(`http.server`、`json`、`csv`)だけで書かれている。**Flask など外部のライブラリを使わない、
   pip でのインストールを前提にしない**(Raspberry Pi はインターネットにつながっていないことがある)。
