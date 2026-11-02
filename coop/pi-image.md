@@ -26,6 +26,8 @@ nav_order: 9
    Raspberry Pi Imager の画面や OS の選び方が変わっていないか、所要時間(書き込み・初回起動・`apt install`)を確かめる。
 2. **ネットワーク**
    - 無線LAN(`ICT_EX5_2G` / `ICT_EX5_5G`)の ESP32・PC から、有線LAN の Raspberry Pi の 50000 番ポートに届くこと。
+   - ルーター(ASUS)の管理画面で、2.4 GHz・5 GHz とも「AP を隔離する」が「いいえ」、`ICT_EX5_2G` / `ICT_EX5_5G` がゲストネットワークでないこと、
+     机のハブがルーターの LAN ポート(WAN ではない)につながっていること。
    - 学生の PC(Windows・Mac)から `ictex5-NN.local` で Raspberry Pi が見つかること(mDNS)。
      見つからない環境なら、IP アドレスで接続する手順(TA が `hostname -I` を調べる、DHCP の割り当て一覧を見るなど)を決めておく。
 3. **見つからないときの代わり**: `.local` の名前で見つからない学生は、実験室のディスプレイ(HDMI-DVI ケーブル)と USB キーボードを
