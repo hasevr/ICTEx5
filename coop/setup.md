@@ -37,11 +37,12 @@ nav_order: 1
 2. SD カードを、カードリーダー(実験室で貸し出します)で PC につなぐ。
 3. Raspberry Pi Imager で次を選ぶ。
    - デバイス: **Raspberry Pi 3**
-   - OS: **Raspberry Pi OS (other) → Raspberry Pi OS Lite (64-bit)**(デスクトップの無い版)
+   - OS: **Raspberry Pi OS (other) → Raspberry Pi OS Lite (64-bit)**(デスクトップの無い版)。
+     実験室で USB メモリを配っている場合は、**Use custom** を選び、USB メモリの中のイメージファイル(`.img.xz`)を選ぶ(ダウンロードを待たずに済む)
    - ストレージ: つないだ SD カード(容量で確かめる。**PC の他のディスクを選ばないこと**)
 4. 「OS のカスタマイズ」(「設定を編集する」)で次を設定する。
    - ホスト名: **`ictex5-NN`**(`NN` はキットの番号。他の人と重ならないこと)
-   - ユーザー名 **`pi`** と、自分で決めたパスワード(忘れないこと)
+   - ユーザー名 **`pi`** と、自分で決めたパスワード(忘れないようメモしておく)
    - 無線LAN の設定: しない(有線LAN でつなぐ)
    - ロケール: タイムゾーン `Asia/Tokyo`、キーボード `jp`
    - サービス: **SSH を有効にする**(パスワード認証を使う)
@@ -52,7 +53,8 @@ nav_order: 1
 ## 3. Raspberry Pi を起動して、PC から SSH でつなぐ
 
 1. **LAN ケーブル**で Raspberry Pi と机のハブをつなぐ。
-2. **電源**(Micro USB の AC アダプタ)をつなぐ。初回の起動は 2〜3 分かかります。
+2. **電源**をつなぐ。キットの **5 V 3 A の USB 電源**と Micro USB ケーブルを使います(PC の USB からでは電流が足りず、不安定になります)。
+   初回の起動は 2〜3 分かかります。
 3. PC の **PowerShell**(Windows)か **ターミナル**(Mac)で、SSH でログインする。パスワードは 2. で決めたものです。
    ```
    ssh pi@ictex5-NN.local
@@ -65,24 +67,26 @@ nav_order: 1
    `10.0.1.23` のような数字が出ます(人によって違います。次回も同じとは限りません)。
 
 {: .note }
-`ictex5-NN.local` で見つからないときは、1分ほど待ってからもう一度試してください。それでもだめなら TA に相談してください
-(IP アドレスを調べて `ssh pi@10.0.1.23` のように接続します)。
+`ictex5-NN.local` で見つからないときは、1分ほど待ってからもう一度試してください。それでもだめなら、下の「うまくいかないとき」の方法で
+IP アドレスを調べ、`ssh pi@10.0.1.23` のように IP アドレスで接続します。
 
 ## 4. Raspberry Pi で Web サーバを動かす
 
-SSH でログインした Raspberry Pi で、必要なソフトウェア(Flask と git)を入れ、サンプルを取ってきます。
-初回だけ必要で、3〜5分かかります。
+サーバのプログラム `app.py` は Python の標準ライブラリだけで動くので、Raspberry Pi に何かをインストールする必要はありません。
+PC から `scp` で Raspberry Pi に送って起動します。AI が書き換えたものを送るときも、同じ手順です。
 
-```
-sudo apt update && sudo apt install -y python3-flask git
-git clone https://github.com/hasevr/ICTEx5 ~/ICTEx5
-```
-
-サーバを起動します。
-
-```
-cd ~/ICTEx5/server && python3 app.py
-```
+1. Colab のノートブックの「**サーバのプログラムを PC にダウンロードする**」のセルを実行し、`app.py` を PC に保存する
+   (ダウンロードのフォルダに入ります)。
+2. PC の PowerShell(Mac は ターミナル)で、ダウンロードのフォルダに移って Raspberry Pi に送る。
+   ```
+   cd ~/Downloads
+   scp app.py pi@ictex5-NN.local:
+   ```
+   (最後の `:` を忘れないこと。Raspberry Pi のホームフォルダに送られます)
+3. SSH でログインした Raspberry Pi で起動する。
+   ```
+   python3 app.py
+   ```
 
 `Running on http://...:50000` と出たら、PC のブラウザで次を開きます。
 
@@ -136,5 +140,6 @@ I (6201) HTTP: status=200 rtt=12.3 ms ADC=1934 resp={"adc":1934,"freq":0.0}
 | `Wi-Fi disconnected, retrying` が続く | 無線LAN の名前とパスワード(`show` で確認)。別の無線LAN にするときは `esp send "wifi 名前 パスワード\n"` |
 | ブラウザでページが開かない | PC が実験室の無線LAN につながっているか。`ictex5-NN.local` の代わりに IP アドレスで開く |
 | サーバに `Address already in use` | 前の `app.py` が動いたまま。`pkill -f app.py` で止めてから起動し直す |
+| `ictex5-NN.local` が見つからない | 1分ほど待つ。それでもだめなら、実験室のディスプレイに HDMI-DVI ケーブルで、キーボードを USB でつなぎ、`pi` でログインして `hostname -I` で IP アドレスを調べる。以後は名前の代わりに IP アドレスを使う |
 
 実験が終わったら、Raspberry Pi で `sudo shutdown now` を実行し、20 秒ほど待ってから電源を抜いてください。

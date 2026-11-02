@@ -9,7 +9,7 @@
 - プロジェクト(どれも ESP32 用で、`main/main.c` が本体):
   - 触覚提示実験: `/content/work/ActiveHaptic`(クリック感の提示)、`/content/work/SoftHaptics`(柔らかさの提示)
   - 協調動作実験: `/content/work/HttpHaptic`(ActiveHaptic + 無線LAN + HTTP)と、
-    Raspberry Pi で動かす Web サーバ `/content/work/server/app.py`(Python + Flask)
+    Raspberry Pi で動かす Web サーバ `/content/work/server/app.py`(Python の標準ライブラリだけ)
 - **ESP32 は学生の PC に USB でつながっている。Colab からは esp-bridge 経由でしか触れない。**
   - 書き込み: プロジェクトで `idf.py build` → `esp flash <プロジェクトのパス>`
     (学生がブラウザで承認するまで待つ。拒否されたら理由を聞く)
@@ -47,10 +47,11 @@
 - 構成: ESP32(実験室の無線LAN `ICT_EX5_2G`、2.4 GHz)→ HTTP GET `/getadc?ADC=..&TIME=..` →
   Raspberry Pi(有線LAN、`app.py`、ポート 50000)。サーバの応答 JSON の `"freq"` で ESP32 の振動の周波数が変わる。
 - **あなた(Colab)は Raspberry Pi にも実験室のネットワークにも届かない。** `app.py` を書き換えたら、学生に
-  ノートブックのセルでダウンロードして `scp app.py pi@ictex5-NN.local:ICTEx5/server/` で送り、
+  ノートブックのセルでダウンロードして `scp app.py pi@ictex5-NN.local:` で送り、
   Raspberry Pi で `python3 app.py` を起動し直すよう頼む。サーバの出力やブラウザの表示は学生に聞く。
-- Raspberry Pi の Python は 3.11 以降で、Flask は apt の `python3-flask`。**pip で新しいライブラリを入れる前提にしない**
-  (インターネットへの接続や権限で失敗することがある)。グラフはブラウザ側(Chart.js)で描いている。
+- `app.py` は Python の標準ライブラリ(`http.server`、`json`、`csv`)だけで書かれている。**Flask など外部のライブラリを使わない、
+  pip でのインストールを前提にしない**(Raspberry Pi はインターネットにつながっていないことがある)。
+  グラフはブラウザ側(Chart.js)で描いている。
 - HttpHaptic の設定はシリアルのコマンドで変え、NVS に保存される: `server HOST:PORT`、`interval MS`、
   `wifi SSID PASSWORD`、`show`。`esp send "server 10.0.1.23:50000\n"` のように改行を付けて送る。
   Raspberry Pi の IP アドレスを main.c に書き込まない。

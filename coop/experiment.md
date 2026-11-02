@@ -19,9 +19,11 @@ nav_order: 2
 - AI は Colab のターミナルで `cd /content/work && agy` として起動します。最初の依頼には「**AGENTS.md を読んでから**」と添えてください。
 - ESP32 のプログラムは `/content/work/HttpHaptic/main/main.c`、Raspberry Pi のプログラムは `/content/work/server/app.py` です。
 - **Raspberry Pi へのプログラムの送り方**: AI が `app.py` を書き換えたら、ノートブックの「サーバのプログラムを PC にダウンロードする」
-  セルでダウンロードし、PC から `scp app.py pi@ictex5-NN.local:ICTEx5/server/` で送ります。
+  セルでダウンロードし、PC から `scp app.py pi@ictex5-NN.local:` で送ります([準備と動作確認](setup.html) の 4. と同じ)。
   Raspberry Pi で `Ctrl+C` してから `python3 app.py` で起動し直すと反映されます。
   小さな変更なら、Raspberry Pi 上で `nano app.py` として直接書き換えてもかまいません。
+  `app.py` は Python の標準ライブラリ(`http.server`)だけで書かれています。Raspberry Pi にライブラリを追加しなくて済むよう、
+  AI にも標準ライブラリの範囲で書き換えてもらいます(AGENTS.md に書いてあります)。
 - **AI は Raspberry Pi と実験室のネットワークに触れません。** サーバの出力やブラウザの表示は、あなたが見て AI に伝えます。
   測るのも人の仕事です。
 - 依頼・AI の変更・測った結果は、ノートブックの「AI 利用の記録」の表に書いていきます。

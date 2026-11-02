@@ -40,10 +40,11 @@ code("""!esp flash /content/work/HttpHaptic
 !esp send "server 10.0.1.23:50000\\n"
 !esp log --since-flash -n 30"""),
 md("""## Raspberry Pi のサーバのプログラムを PC にダウンロードする
-AI に `/content/work/server/app.py` を書き換えてもらったら、下のセルで PC にダウンロードし、
+最初のサンプルも、AI が書き換えた後も、下のセルで `/content/work/server/app.py` を PC にダウンロードし、
 PC の PowerShell(Mac は ターミナル)で Raspberry Pi に送ります(`NN` はキットの番号)。
 ```
-scp app.py pi@ictex5-NN.local:ICTEx5/server/
+cd ~/Downloads
+scp app.py pi@ictex5-NN.local:
 ```"""),
 code("""from google.colab import files
 files.download('/content/work/server/app.py')"""),
