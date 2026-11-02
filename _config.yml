@@ -1,5 +1,5 @@
 title: 情報通信実験第5
-description: 触覚提示実験・協調動作実験(ESP32 / Raspberry Pi)— AI コーディング対応版
+description: 触覚提示実験・協調動作実験・IoT 設計制作実験(ESP32 / Raspberry Pi)— AI コーディング対応版
 lang: ja
 remote_theme: just-the-docs/just-the-docs@v0.10.1
 plugins:
