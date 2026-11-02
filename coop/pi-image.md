@@ -25,9 +25,11 @@ nav_order: 9
 - ログイン画面(ディスプレイ)に IP アドレスとホスト名を表示する。IP アドレスが割り当てられた後に画面を表示し直す
   (`ictex5-show-ip.service`)。2回目以降の起動でも表示される。
 - タイムゾーン `Asia/Tokyo`、キーボード `jp`。
+- **Flask(`python3-flask`)と git** を入れる。起動用の領域の `ictex5-debs/` に Debian trixie の `.deb`(依存を含む7個、約 11 MB)を入れてあり、
+  初回の起動で `dpkg -i` してから消す。**ネットワークも時計も不要**です。
 
-Raspberry Pi にはソフトウェアを追加しません。サーバ(`app.py`)は Python の標準ライブラリだけで動き、PC から `scp` で送ります。
-そのため、Raspberry Pi からインターネットに届かなくても、時計が合っていなくても、実験には影響しません。
+サンプルのサーバ(`app.py`)は Python の標準ライブラリだけで動くので Flask は必須ではありませんが、自由制作や発展課題で使えるよう入れてあります。
+`app.py` は PC から `scp` で送るので、Raspberry Pi からインターネットに届かなくても、時計が合っていなくても、実験には影響しません。
 
 ## 作り直すとき
 
@@ -35,7 +37,9 @@ Raspberry Pi にはソフトウェアを追加しません。サーバ(`app.py`)
 2. 最初のパーティション(FAT)の `user-data` を、このリポジトリの [`hardware/raspberrypi/user-data`](https://github.com/hasevr/ICTEx5/blob/main/hardware/raspberrypi/user-data)
    で置き換える。パスワードの行(`passwd:`)は、`openssl passwd -6 '<パスワード>'` で作ったハッシュにする。
    Windows・Mac なら、イメージを一度 SD カードに書き込み、PC で見える `bootfs` の `user-data` を書き換えてから吸い出してもよい。
-3. `xz -T0` で圧縮して配る。
+3. Flask と git の `.deb` を、最初のパーティションの `ictex5-debs/` に入れる(Debian trixie arm64 の `python3-flask`、`python3-werkzeug`、
+   `python3-itsdangerous`、`python3-click`、`git`、`git-man`、`liberror-perl`。元の OS の版で足りない依存が変わることがあるので確かめる)。
+4. `xz -T0` で圧縮して配る。
 
 ## 用意するもの
 

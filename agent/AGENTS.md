@@ -49,8 +49,8 @@
 - **あなた(Colab)は Raspberry Pi にも実験室のネットワークにも届かない。** `app.py` を書き換えたら、学生に
   ノートブックのセルでダウンロードして `scp app.py pi@<Raspberry Pi の IP アドレス>:` で送り、
   Raspberry Pi で `python3 app.py` を起動し直すよう頼む。サーバの出力やブラウザの表示は学生に聞く。
-- `app.py` は Python の標準ライブラリ(`http.server`、`json`、`csv`)だけで書かれている。**Flask など外部のライブラリを使わない、
-  pip でのインストールを前提にしない**(Raspberry Pi はインターネットにつながっていないことがある)。
+- `app.py` は Python の標準ライブラリ(`http.server`、`json`、`csv`)だけで書かれている。Raspberry Pi には Flask(`python3-flask`)と git も
+  入っているので使ってもよいが、**pip での新しいライブラリのインストールを前提にしない**(Raspberry Pi はインターネットにつながっていないことがある)。
   グラフはブラウザ側(Chart.js)で描いている。
 - HttpHaptic の設定はシリアルのコマンドで変え、NVS に保存される: `server HOST:PORT`、`interval MS`、
   `wifi SSID PASSWORD`、`show`。`esp send "server 10.0.1.23:50000\n"` のように改行を付けて送る。

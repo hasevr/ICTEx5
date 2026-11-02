@@ -2,6 +2,7 @@
 # 情報通信実験第5 協調動作実験用(https://hasevr.github.io/ICTEx5/coop/)
 # 初回の起動で: ユーザー pi(共通パスワード)、SSH を有効、ホスト名を ictex5-<MAC 末尾4桁> に、
 # ログイン画面(ディスプレイ)に IP アドレスとホスト名を表示する。
+# Flask と git を、起動用の領域に入れておいた .deb からインストールする(ネットワーク不要)。
 preserve_hostname: true
 manage_etc_hosts: false
 timezone: Asia/Tokyo
@@ -55,6 +56,7 @@ write_files:
 runcmd:
 - [/usr/local/sbin/ictex5-hostname]
 - [systemctl, enable, --now, ssh]
+- [sh, -c, 'dpkg -i /boot/firmware/ictex5-debs/*.deb && rm -rf /boot/firmware/ictex5-debs']
 - [systemctl, daemon-reload]
 - [systemctl, enable, ictex5-show-ip.service]
 - [systemctl, start, --no-block, ictex5-show-ip.service]
