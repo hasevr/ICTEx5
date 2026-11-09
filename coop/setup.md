@@ -82,6 +82,15 @@ Raspberry Pi Imager で書き込んでもかまいません。その場合は OS
    ```
    初回は `Are you sure you want to continue connecting (yes/no)?` と聞かれるので `yes` と入力します。
 
+{: .warning }
+`WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!` と出て接続できないときは、その IP アドレスに以前つないだ別の Raspberry Pi
+(または書き込み直す前の自分の Raspberry Pi)の鍵が PC に残っています。SD カードを書き込むたびに Raspberry Pi の鍵は新しくなり、
+IP アドレスは使い回されるので、誰にでも起こります。次のコマンドで古い鍵を消してから、もう一度 `ssh` してください
+(Windows の PowerShell でも Mac でも同じです)。
+```
+ssh-keygen -R 10.0.1.23
+```
+
 {: .note }
 同じネットワークの環境によっては、IP アドレスの代わりにホスト名(`ssh pi@ictex5-a1b2.local`)でもつながります。
 つながればどちらを使ってもかまいません。
@@ -156,6 +165,7 @@ I (6201) HTTP: status=200 rtt=12.3 ms ADC=1934 resp={"adc":1934,"freq":0.0}
 | `Wi-Fi disconnected, retrying` が続く | 無線LAN の名前とパスワード(`show` で確認)。別の無線LAN にするときは `esp send "wifi 名前 パスワード\n"` |
 | ブラウザでページが開かない | PC が実験室の無線LAN につながっているか。URL の IP アドレスとポート(`:50000`)が正しいか |
 | サーバに `Address already in use` | 前の `app.py` が動いたまま。`pkill -f app.py` で止めてから起動し直す |
+| `ssh` で `REMOTE HOST IDENTIFICATION HAS CHANGED!` | 古い鍵が残っている。`ssh-keygen -R <IP アドレス>` で消してから、もう一度 `ssh`(上の 3. の注意) |
 | `ssh` で `Connection refused` | 初回の起動の設定がまだ終わっていない。1〜2分待ってから試す。画面に IP アドレスが出てからつなぐ |
 | 画面の IP address が空のまま | LAN ケーブルがハブにつながっているか。ハブの電源。ケーブルを挿し直して1分待つ |
 | 画面に何も出ない | 電源を入れる前にディスプレイをつないだか。ディスプレイの入力の切り替え。電源を抜いて挿し直す |
