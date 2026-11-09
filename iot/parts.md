@@ -31,7 +31,7 @@ ADC で電圧を読むなら IO32〜IO39(ADC1)を使います。ADC2 のピン�
 
 ## 9 軸慣性センサ MPU-9250
 
-加速度センサ・ジャイロ(角速度)・地磁気センサが入っています。[技術資料(TDK InvenSense)](https://invensense.tdk.com/products/motion-tracking/9-axis/mpu-9250/)
+加速度センサ・ジャイロ(角速度)・地磁気センサが入っています。[データシート](https://cdn.sparkfun.com/assets/learn_tutorials/5/5/0/MPU9250REV1.0.pdf)・[レジスタマップ](https://cdn.sparkfun.com/assets/learn_tutorials/5/5/0/MPU-9250-Register-Map.pdf)(TDK InvenSense の資料。生産終了のためメーカーのページは無くなっており、SparkFun に置かれているものを参照)
 
 **配線**(センサのピン名は基板の**裏面**に書いてあります)
 

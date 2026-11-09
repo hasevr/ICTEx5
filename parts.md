@@ -41,7 +41,7 @@ nav_order: 7
 | [ケース](https://www.monotaro.com/p/1004/2191/) | 1 | |
 | [フォトリフレクタ](http://akizukidenshi.com/catalog/g/gP-04500/) | 1 | |
 | Raspberry Pi 3 Model B、SD カード | 1 | 後半の協調動作実験で使う |
-| [MPU-9250 9 軸センサ](https://invensense.tdk.com/products/motion-tracking/9-axis/mpu-9250/) | 1 | 加速度・ジャイロ・地磁気 |
+| MPU-9250 9 軸センサ([データシート](https://cdn.sparkfun.com/assets/learn_tutorials/5/5/0/MPU9250REV1.0.pdf)) | 1 | 加速度・ジャイロ・地磁気 |
 | [Adafruit I2S 3W Class D Amplifier(MAX98357A)](https://www.adafruit.com/product/3006) | 1 | |
 
 <p>
