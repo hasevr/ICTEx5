@@ -40,7 +40,8 @@ nav_order: 1
    - **Mac**: 「Download for macOS」で、Apple シリコン(M1 以降)なら arm64 版、Intel Mac なら x64 版。
      ダウンロードした `.dmg` を開き、balenaEtcher をアプリケーションフォルダにドラッグする。
      初回の起動で「開発元を確認できない」などと出たら、「システム設定 → プライバシーとセキュリティ」で「このまま開く」。
-2. `ictex5-coop.img.xz`(約 0.6 GB)を、**大学の Box(リンクは LMS で案内)からダウンロード**する。
+2. `ictex5-coop.img.xz`(約 0.6 GB)を、**大学の Box からダウンロード**する: [https://science-tokyo.box.com/s/n4d0z45l3kwk27la12ddxf57ofmopyyn](https://science-tokyo.box.com/s/n4d0z45l3kwk27la12ddxf57ofmopyyn)
+   (大学のアカウントでログインすると開けます。開いたら「ダウンロード」)。
    全員が一度にダウンロードして遅いときは、実験室で配る **USB メモリ**から PC にコピーしてもよい(TA の指示に従う)。
    展開しなくてよい。Mac で自動的に展開されても、展開後の `.img` を使えばよい。
    balenaEtcher のインストールとダウンロードは、同時に進めてかまいません。
